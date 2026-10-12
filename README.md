@@ -138,9 +138,22 @@ Set `PORT` if your host provides one. The frontend uses a same-origin Socket.IO 
 VITE_SOCKET_URL=https://your-api.example.com npm run build
 ```
 
-See `client/.env.example` for local configuration.
+### Deploying Frontend to Vercel
 
-GitHub Pages can host only the static frontend. It cannot run the Socket.IO backend, so collaboration requires a separately hosted backend and `VITE_SOCKET_URL`.
+The React/Vite frontend can be deployed directly to [Vercel](https://vercel.com):
+
+1. **Import the repository into Vercel**:
+   - The root `vercel.json` is pre-configured to automatically install client dependencies and build the Vite bundle (`client/dist`).
+   - If importing with root directory `./` (default), no custom build settings are needed.
+   - If setting Root Directory to `client`, Vite is auto-detected and works out of the box.
+
+2. **Configure Backend URL**:
+   - In Vercel Project Settings ➔ **Environment Variables**, add:
+     - **Name**: `VITE_SOCKET_URL`
+     - **Value**: `https://<your-backend-app-url>` (e.g., your deployed Render, Railway, or Fly.io URL).
+   - Redeploy so the build picks up the environment variable.
+
+> **Note**: Vercel functions are serverless and cannot maintain persistent stateful WebSocket connections across peers. Deploy the companion Node.js server (`server.js`) to a persistent Node host (such as Render or Railway) and point `VITE_SOCKET_URL` to it.
 
 ---
 
@@ -188,8 +201,11 @@ node test_collaboration.js
 ├── server.js               # Express + Socket.IO server (auth, throttle, host transfer, persistence)
 ├── test_collaboration.js   # Automated integration test suite
 ├── package.json            # Root configuration and run scripts
+├── vercel.json             # Vercel deployment configuration
 ├── .gitignore              # Git ignore rules
+├── .env.example            # Environment variables template
 ├── client/                 # React (Vite) Frontend
+│   ├── vercel.json         # Client-level Vercel configuration
 │   ├── src/
 │   │   ├── App.jsx         # Monaco editor, presence indicators, split sidebar & audit feed
 │   │   ├── App.css         # Dark theme layout & custom cursor overlays

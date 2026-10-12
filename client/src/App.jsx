@@ -36,6 +36,16 @@ function useRoomSocket({ onRoom, onMembers, onCode, onClear, onLanguage, onCurso
     socket.on('disconnect', () => setStatus('offline'));
     socket.on('reconnect_attempt', () => setStatus('syncing'));
     socket.on('reconnect', () => { setStatus('syncing'); socket.emit('join_room', payload(), (res) => { if (res?.success) { setRoom(res.room); callbacks.current.onRoom?.(res.room); setStatus('connected'); } else { setJoinError(res?.error || 'Could not reconnect.'); } }); });
+    socket.on('connect_error', (err) => {
+      setIsJoining(false);
+      setStatus('offline');
+      const isMissingUrl = !SOCKET_URL && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      setJoinError(
+        isMissingUrl
+          ? 'Cannot connect to server. Please set VITE_SOCKET_URL in your Vercel Project Settings to your deployed backend URL.'
+          : `Connection error: ${err?.message || 'Server unreachable'}`
+      );
+    });
     socket.on('members_updated', data => callbacks.current.onMembers?.(data));
     socket.on('code_change', data => callbacks.current.onCode?.(data.fullCode));
     socket.on('code_cleared', () => callbacks.current.onClear?.());
